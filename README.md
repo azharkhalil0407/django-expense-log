@@ -191,7 +191,7 @@ Example (illustrative — refine the exact shape as you see fit):
 ```text
 Bot message delivered to BOT_CHAT_ID:
 
-⚠️ Budget alert: "Dining" is over its monthly limit.
+Budget alert: "Dining" is over its monthly limit.
 Spent 215.00 / 200.00 USD for June 2026.
 ```
 
