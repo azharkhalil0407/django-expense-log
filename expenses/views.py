@@ -3,6 +3,7 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from django.db.models import Sum
+from django.db.models.functions import TruncMonth
 from django.utils import timezone
 from decimal import Decimal
 
@@ -100,6 +101,32 @@ def expense_summary(request):
                 "as_of": timezone.now().date().isoformat(),
             }
             for category, data in summary_dict.items()
+        ],
+    }
+    return Response(result)
+
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def monthly_summary(request):
+    expenses = Expense.objects.filter(user=request.user)
+    
+    monthly_data = (
+        expenses
+        .annotate(month=TruncMonth('date'))
+        .values('month')
+        .annotate(total=Sum('amount'))
+        .order_by('month')
+    )
+    
+    result = {
+        "base_currency": BASE_CURRENCY,
+        "monthly": [
+            {
+                "month": item["month"].strftime("%Y-%m") if item["month"] else None,
+                "total": str(item["total"] or Decimal("0.00")),
+            }
+            for item in monthly_data
         ],
     }
     return Response(result)
