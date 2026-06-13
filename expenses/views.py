@@ -2,10 +2,13 @@ from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from django.db.models import Sum 
+from django.db.models import Sum
+from django.utils import timezone
+from decimal import Decimal
 
 from .models import Category, Expense
 from .serializers import CategorySerializer, ExpenseSerializer
+from .currency import BASE_CURRENCY, convert_amount
 
 
 @api_view(["GET", "POST"])
@@ -69,14 +72,31 @@ def expense_detail(request, pk):
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
 def expense_summary(request):
-    summary_qs = (
-        Expense.objects.filter(user=request.user)
-        .values("category__name")
-        .annotate(total=Sum("amount"))
-        .order_by("category__name")
-    )
-    result = [
-        {"category": item["category__name"], "total": item["total"]}
-        for item in summary_qs
-    ]
+    expenses = Expense.objects.filter(user=request.user)
+    
+    summary_dict = {}
+    for expense in expenses:
+        category_name = expense.category.name
+        if category_name not in summary_dict:
+            summary_dict[category_name] = {
+                "total": Decimal("0.00"),
+                "rate": Decimal("1.00"),
+                "currency": expense.currency,
+            }
+        
+        converted = convert_amount(expense.amount, expense.currency, BASE_CURRENCY)
+        summary_dict[category_name]["total"] += converted
+    
+    result = {
+        "base_currency": BASE_CURRENCY,
+        "categories": [
+            {
+                "category": category,
+                "total": str(data["total"]),
+                "rate": str(data["rate"]),
+                "as_of": timezone.now().date().isoformat(),
+            }
+            for category, data in summary_dict.items()
+        ],
+    }
     return Response(result)
