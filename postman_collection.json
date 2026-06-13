@@ -21,7 +21,7 @@
           "host": ["{{base_url}}"],
           "path": ["api", "categories", ""]
         },
-        "description": "Returns all categories."
+        "description": "Returns all categories. Requires authentication."
       }
     },
     {
@@ -33,14 +33,14 @@
         ],
         "body": {
           "mode": "raw",
-          "raw": "{\n  \"name\": \"Groceries\",\n  \"description\": \"Food and household supplies\"\n}"
+          "raw": "{\n  \"name\": \"Groceries\",\n  \"description\": \"Food and household supplies\",\n  \"monthly_limit\": \"500.00\",\n  \"is_favorite\": true\n}"
         },
         "url": {
           "raw": "{{base_url}}/api/categories/",
           "host": ["{{base_url}}"],
           "path": ["api", "categories", ""]
         },
-        "description": "Creates a new category."
+        "description": "Creates a new category. Includes optional monthly_limit and is_favorite fields. Requires authentication."
       }
     },
     {
@@ -57,7 +57,7 @@
             { "key": "end_date", "value": "2026-12-31" }
           ]
         },
-        "description": "Lists all expenses. Optionally filter by start_date and end_date (YYYY-MM-DD)."
+        "description": "Lists all expenses. Optionally filter by start_date and end_date (YYYY-MM-DD). Requires authentication."
       }
     },
     {
@@ -69,14 +69,14 @@
         ],
         "body": {
           "mode": "raw",
-          "raw": "{\n  \"title\": \"Weekly shop\",\n  \"amount\": \"54.20\",\n  \"category\": 1,\n  \"date\": \"2026-06-09\",\n  \"notes\": \"Supermarket run\"\n}"
+          "raw": "{\n  \"title\": \"Weekly shop\",\n  \"amount\": \"54.20\",\n  \"currency\": \"USD\",\n  \"category\": 1,\n  \"date\": \"2026-06-09\",\n  \"notes\": \"Supermarket run\"\n}"
         },
         "url": {
           "raw": "{{base_url}}/api/expenses/",
           "host": ["{{base_url}}"],
           "path": ["api", "expenses", ""]
         },
-        "description": "Creates a new expense."
+        "description": "Creates a new expense. Includes currency field for multi-currency support. Triggers budget alert if category limit is exceeded. Requires authentication."
       }
     },
     {
@@ -89,7 +89,7 @@
           "host": ["{{base_url}}"],
           "path": ["api", "expenses", "1", ""]
         },
-        "description": "Retrieves a single expense by id."
+        "description": "Retrieves a single expense by id. Requires authentication."
       }
     },
     {
@@ -101,14 +101,14 @@
         ],
         "body": {
           "mode": "raw",
-          "raw": "{\n  \"title\": \"Weekly shop (updated)\",\n  \"amount\": \"60.00\",\n  \"category\": 1,\n  \"date\": \"2026-06-09\",\n  \"notes\": \"Adjusted total\"\n}"
+          "raw": "{\n  \"title\": \"Weekly shop (updated)\",\n  \"amount\": \"60.00\",\n  \"currency\": \"USD\",\n  \"category\": 1,\n  \"date\": \"2026-06-09\",\n  \"notes\": \"Adjusted total\"\n}"
         },
         "url": {
           "raw": "{{base_url}}/api/expenses/1/",
           "host": ["{{base_url}}"],
           "path": ["api", "expenses", "1", ""]
         },
-        "description": "Updates an existing expense by id."
+        "description": "Updates an existing expense by id. Requires authentication."
       }
     },
     {
@@ -121,7 +121,7 @@
           "host": ["{{base_url}}"],
           "path": ["api", "expenses", "1", ""]
         },
-        "description": "Deletes an expense by id."
+        "description": "Deletes an expense by id. Requires authentication."
       }
     },
     {
@@ -134,7 +134,20 @@
           "host": ["{{base_url}}"],
           "path": ["api", "expenses", "summary", ""]
         },
-        "description": "Returns the total amount spent per category, converted to BASE_CURRENCY (Currency conversion feature)."
+        "description": "Returns total spent per category, with currency conversion to BASE_CURRENCY. Requires authentication."
+      }
+    },
+    {
+      "name": "Monthly Summary",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/api/expenses/monthly-summary/",
+          "host": ["{{base_url}}"],
+          "path": ["api", "expenses", "monthly-summary", ""]
+        },
+        "description": "Returns total spending grouped by month. Requires authentication."
       }
     },
     {
@@ -146,14 +159,14 @@
         ],
         "body": {
           "mode": "raw",
-          "raw": "{\n  \"name\": \"Dining\",\n  \"description\": \"Restaurants and takeout\",\n  \"monthly_limit\": \"200.00\"\n}"
+          "raw": "{\n  \"name\": \"Dining\",\n  \"description\": \"Restaurants and takeout\",\n  \"monthly_limit\": \"200.00\",\n  \"is_favorite\": false\n}"
         },
         "url": {
           "raw": "{{base_url}}/api/categories/",
           "host": ["{{base_url}}"],
           "path": ["api", "categories", ""]
         },
-        "description": "Bot alerts feature: creates a category with a monthly spending limit. Crossing it triggers a bot alert."
+        "description": "Creates a category with monthly budget limit. Exceeding it triggers a bot alert. Requires authentication."
       }
     },
     {
@@ -172,7 +185,7 @@
           "host": ["{{base_url}}"],
           "path": ["api", "expenses", ""]
         },
-        "description": "Currency conversion feature: creates an expense in a non-base currency. The summary endpoint converts it to BASE_CURRENCY."
+        "description": "Creates an expense in a non-base currency. The summary endpoint converts it to BASE_CURRENCY. Requires authentication."
       }
     }
   ]
