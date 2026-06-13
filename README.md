@@ -144,12 +144,12 @@ HTTP 200 OK
 
 **Overview:** Expenses can be recorded in any ISO currency. The summary endpoint converts all amounts to `BASE_CURRENCY` (set in `.env`) using a live exchange rate API.
 
-**Design Decisions:** Added `currency` field (CharField, max_length=3, default="USD") to Expense. Created `expenses/currency.py` with `get_exchange_rate()` and `convert_amount()`. The summary view converts each expense before aggregating. Falls back to rate of 1.0 if the API is unreachable.
+**Design Decisions:** Added `currency` field (CharField, max_length=3, default="USD") to Expense. Created `expenses/currency.py` with `get_exchange_rate()` and `convert_amount_with_rate()`. The summary view converts each expense before aggregating and calculates the actual exchange rate used. Falls back to rate of 1.0 if the API is unreachable.
 
 **API Changes:**
 - `currency` field added to Expense model and ExpenseSerializer
-- `expenses/currency.py` created
-- `expense_summary()` now converts amounts before totalling
+- `expenses/currency.py` created with live exchange rate fetching
+- `expense_summary()` now converts amounts and returns actual rates
 
 **Example Request/Response:**
 ```json
@@ -184,13 +184,15 @@ HTTP 200 OK
   "categories": [
     {
       "category": "Travel",
-      "total": "129.60"
+      "total": "138.83",
+      "rate": "1.16",
+      "as_of": "2026-06-13"
     }
   ]
 }
 ```
 
-**Known Limits:** Exchange rate API returns 1.0 fallback if unreachable. Rate is fetched live on each request, not cached.
+**Known Limits:** Uses `open.er-api.com` API (free, no API key required). Exchange rate is calculated live for each request based on the expense's recorded currency. Fallback rate is 1.0 if API is unreachable.
 
 ---
 
@@ -285,7 +287,7 @@ HTTP 200 OK
   "monthly": [
     {
       "month": "2026-06",
-      "total": "180.00"
+      "total": "720.00"
     }
   ]
 }
@@ -297,32 +299,29 @@ HTTP 200 OK
 
 ## Bugs Found and Fixed
 
+**Note:** All 5 bugs were identified and fixed locally before the first push. Rather than creating separate commits, they were fixed together in the initial development phase. This was a process oversight on my part and ideally each bug should have had its own `fix/<bug-name>` branch and commit for clarity. The bugs are documented below:
+
 ### Bug 1: Typo in serializers.py field name
 **Description:** CategorySerializer had `catgory` instead of `category`.
 **Root Cause:** Typo when defining the serializer fields list.
 **Fix:** Changed `"catgory"` to `"category"`.
-**Commit Hash:** 94f1dd1
 
 ### Bug 2: Typo in views.py variable name
 **Description:** `expense_list()` view used `serialzer` instead of `serializer`.
 **Root Cause:** Typo in variable assignment.
 **Fix:** Changed `serialzer` to `serializer`.
-**Commit Hash:** 94f1dd1
 
 ### Bug 3: Wrong date filter operator
 **Description:** `expense_list()` used `date__gt` instead of `date__gte` for start_date filtering, excluding the start date itself.
 **Root Cause:** Incorrect lookup used; should be inclusive.
 **Fix:** Changed `date__gt` to `date__gte`.
-**Commit Hash:** 94f1dd1
 
 ### Bug 4: Missing import
 **Description:** `expense_summary()` used `Sum()` but didn't import it.
 **Root Cause:** Import statement was missing from the top of views.py.
 **Fix:** Added `from django.db.models import Sum`.
-**Commit Hash:** 94f1dd1
 
 ### Bug 5: Wrong response key in summary
 **Description:** `expense_summary()` returned `category__name` as the key instead of `category`.
 **Root Cause:** Used the raw ORM annotation name instead of a clean response key.
 **Fix:** Renamed the key in the response using a dict comprehension.
-**Commit Hash:** 94f1dd1
