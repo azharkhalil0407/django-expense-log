@@ -224,8 +224,6 @@ POST /api/expenses/
 ```
 
 Bot message delivered to Discord channel:
-Budget alert: "Dining" is over its monthly limit.
-Spent 215.00 / 200.00 USD for June 2026.
 
 **Screenshot of delivered alert:**
 
