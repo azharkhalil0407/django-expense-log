@@ -9,7 +9,7 @@ from decimal import Decimal
 
 from .models import Category, Expense
 from .serializers import CategorySerializer, ExpenseSerializer
-from .currency import BASE_CURRENCY, convert_amount
+from .currency import BASE_CURRENCY, convert_amount, convert_amount_with_rate
 from .bot_alerts import check_budget_alert
 
 
@@ -81,6 +81,7 @@ def expense_summary(request):
     summary_dict = {}
     for expense in expenses:
         category_name = expense.category.name
+        
         if category_name not in summary_dict:
             summary_dict[category_name] = {
                 "total": Decimal("0.00"),
@@ -88,16 +89,19 @@ def expense_summary(request):
                 "currency": expense.currency,
             }
         
-        converted = convert_amount(expense.amount, expense.currency, BASE_CURRENCY)
+        converted, rate = convert_amount_with_rate(
+            expense.amount, expense.currency, BASE_CURRENCY
+        )
         summary_dict[category_name]["total"] += converted
+        summary_dict[category_name]["rate"] = rate
     
     result = {
         "base_currency": BASE_CURRENCY,
         "categories": [
             {
                 "category": category,
-                "total": str(data["total"]),
-                "rate": str(data["rate"]),
+                "total": str(round(data["total"], 2)),
+                "rate": str(round(data["rate"], 2)),
                 "as_of": timezone.now().date().isoformat(),
             }
             for category, data in summary_dict.items()
