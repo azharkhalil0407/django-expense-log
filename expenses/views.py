@@ -9,6 +9,7 @@ from decimal import Decimal
 from .models import Category, Expense
 from .serializers import CategorySerializer, ExpenseSerializer
 from .currency import BASE_CURRENCY, convert_amount
+from .bot_alerts import check_budget_alert
 
 
 @api_view(["GET", "POST"])
@@ -43,7 +44,8 @@ def expense_list(request):
 
     serializer = ExpenseSerializer(data=request.data)
     serializer.is_valid(raise_exception=True)
-    serializer.save(user=request.user)
+    expense = serializer.save(user=request.user)
+    check_budget_alert(expense)
     return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 
@@ -62,7 +64,8 @@ def expense_detail(request, pk):
     if request.method == "PUT":
         serializer = ExpenseSerializer(expense, data=request.data)
         serializer.is_valid(raise_exception=True)
-        serializer.save()
+        updated_expense = serializer.save()
+        check_budget_alert(updated_expense)
         return Response(serializer.data)
 
     expense.delete()
