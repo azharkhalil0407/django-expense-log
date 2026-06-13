@@ -4,12 +4,16 @@ from .models import Category, Expense
 
 
 class CategorySerializer(serializers.ModelSerializer):
+    user = serializers.StringRelatedField(read_only=True)
+
     class Meta:
         model = Category
-        fields = ["id", "name", "description"]
+        fields = ["id", "user", "name", "description"]
 
 
 class ExpenseSerializer(serializers.ModelSerializer):
+    user = serializers.StringRelatedField(read_only=True)
+
     class Meta:
         model = Expense
-        fields = ["id", "title", "amount", "catgory", "date", "notes"]
+        fields = ["id", "user", "title", "amount", "category", "date", "notes"]
